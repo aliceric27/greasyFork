@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 寵物技能快快出
 // @namespace    http://tampermonkey.net/
-// @version      0.8
+// @version      0.71
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 寵物技能
 // @match        https://msu.io/marketplace/*
@@ -126,6 +126,7 @@ function translateSkill(skill) {
                             const skillsDiv = document.createElement('div');
                             skillsDiv.className = 'pet-skills-info';
                             skillsDiv.style.cssText = `
+                                border-radius: 5px;
                                 font-size: 12px;
                                 color: #FFF;
                                 margin-top: 5px;
