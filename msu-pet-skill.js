@@ -117,9 +117,9 @@ function translateSkill(skill) {
 
             for (const element of allNameElements) {
                 if (element.textContent.includes(fullPetName)) {
-                    const parentDiv = element.closest('div[class*="_14ahg4pm"]');
+                    const parentDiv = element.closest('div[class*="_14ahg4po"]');
                     if (parentDiv) {
-                        const targetDiv = parentDiv.querySelector('div[class*="_14ahg4pp"]');
+                        const targetDiv = parentDiv.querySelector('div[class*="_14ahg4pr"]');
                         const existingSkills = targetDiv?.querySelector('.pet-skills-info');
                         
                         if (!existingSkills && targetDiv) {
