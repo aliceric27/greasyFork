@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 寵物技能快快出
 // @namespace    http://tampermonkey.net/
-// @version      0.81
+// @version      0.82
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 寵物技能
 // @match        https://msu.io/marketplace/nft?sort=ExploreSorting_*&price=0%2C10000000000&level=0%2C250&categories=1000400000%2C1000401001&potential=0%2C4&bonusPotential=0%2C4&starforce=0%2C25&viewMode=0*
@@ -331,29 +331,30 @@ function translateSkill(skill) {
     function filterPetsBySkills() {
         const selectedSkills = Array.from(document.querySelectorAll('.skill-filter input:checked'))
             .map(checkbox => checkbox.value);
-
-        const petRows = document.querySelectorAll('tr[class*="_14ahg4p9"]');
-
+    
+        const petRows = document.querySelectorAll('tr');
+    
         petRows.forEach(row => {
             const skillsInfo = row.querySelector('.pet-skills-info');
             if (!skillsInfo) {
                 row.style.display = 'none';
                 return;
             }
-
-            const petSkills = skillsInfo.textContent
-                .replace('技能: ', '')
-                .split(', ')
-                .map(chi => {
+    
+            // 獲取所有技能 div 的文字內容
+            const petSkills = Array.from(skillsInfo.querySelectorAll('div > div'))
+                .map(skillDiv => {
+                    // 從中文技能名稱反查英文名稱
+                    const chineseSkill = skillDiv.textContent.trim();
                     const entry = Object.entries(skillTranslations)
-                        .find(([_, value]) => value === chi);
-                    return entry ? entry[0] : chi;
+                        .find(([_, value]) => value === chineseSkill);
+                    return entry ? entry[0] : chineseSkill;
                 });
-
+    
             // 修改邏輯：必須完全符合所有勾選的技能才顯示
             const hasAllSelectedSkills = selectedSkills.length === 0 ||
                 selectedSkills.every(skill => petSkills.includes(skill));
-
+    
             row.style.display = hasAllSelectedSkills ? '' : 'none';
         });
     }
