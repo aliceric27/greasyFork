@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 寵物技能快快出
 // @namespace    http://tampermonkey.net/
-// @version      0.75
+// @version      0.8
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 寵物技能
 // @match        https://msu.io/marketplace/nft?sort=ExploreSorting_*&price=0%2C10000000000&level=0%2C250&categories=1000400000%2C1000401001&potential=0%2C4&bonusPotential=0%2C4&starforce=0%2C25&viewMode=0*
@@ -14,6 +14,7 @@
 
 0.73 將資料保存 localStorage 中，並且過期時間為 24 小時
 0.75 稍微修改技能說明
+0.8 新增icon
 */
 
 (function() {
@@ -21,20 +22,39 @@
 
     // 追蹤已處理過的 tokenID
     const processedTokens = new Set();
-
+    // Pet skill img
+    const petImg = {
+        'Item Pouch': 'https://cdn.wikimg.net/en/strategywiki/images/8/87/MS_Pet_Item_only.png',
+        'NESO Magnet': 'https://msu.io/marketplace/images/neso.png',
+        'Auto HP Potion Pouch': 'https://cdn.wikimg.net/en/strategywiki/images/2/22/MS_Pet_Autopot.png',
+        'Auto MP Potion Pouch': 'https://cdn.wikimg.net/en/strategywiki/images/f/f9/MS_Pet_MP_Recharge.png',
+        'Auto Move': 'https://cdn.wikimg.net/en/strategywiki/images/2/27/MS_Pet_Autoloot.png',
+        'Expanded Auto Move': 'https://cdn.wikimg.net/en/strategywiki/images/2/2a/MS_Pet_Range.png',
+        'Fatten Up': 'https://github.com/aliceric27/picx-images-hosting/raw/master/hexo-blog/image.8vmyjueg5g.webp',
+        'Auto Buff': 'https://github.com/aliceric27/picx-images-hosting/raw/master/hexo-blog/image.1hs9b2tx0k.webp',
+        'Pet Training Skill': 'https://cdn.wikimg.net/en/strategywiki/images/3/34/MS_Pet_Unlootable_Item.png',
+        'Magnet Effect': '🧲'
+    }
     // 定義要篩選的技能
-const skillTranslations = {
-    'Item Pouch': '撿取道具',
-    'NESO Magnet': '撿取NESO',
-    'Auto HP Potion Pouch': '自動HP藥水',
-    'Auto MP Potion Pouch': '自動MP藥水',
-    'Auto Move': '自動移動',
-    'Expanded Auto Move': '擴大自動移動範圍',
-    'Fatten Up': '寵物巨大化',
-    'Auto Buff': '自動上Buff',
-    'Pet Training Skill': '親密度提升',
-    'Magnet Effect': '磁力效果(P寵)'
+    const skillTranslations = {
+    'Item Pouch': `撿取道具`,
+    'NESO Magnet': `撿取NESO`,
+    'Auto HP Potion Pouch': `自動HP藥水`,
+    'Auto MP Potion Pouch': `自動MP藥水`,
+    'Auto Move': `自動移動`,
+    'Expanded Auto Move': `擴大自動移動範圍`,
+    'Fatten Up': `寵物巨大化`,
+    'Auto Buff': `自動上Buff`,
+    'Pet Training Skill': `親密度提升`,
+    'Magnet Effect': `磁力效果(P寵)`
 };
+
+function getskillImg(skill) {
+    if (skill === 'Magnet Effect') {
+        return '🧲';
+    }
+    return `<img src="${petImg[skill]}" alt="${skill}" width="24">` || skill;
+}
 
 // 新增翻譯函數
 function translateSkill(skill) {
@@ -139,16 +159,22 @@ function translateSkill(skill) {
     // 新增重試函數
     async function tryFindAndInsertSkills(fullPetName, petSkills, maxRetries = 3) {
         for (let i = 0; i < maxRetries; i++) {
-            const allNameElements = document.querySelectorAll('span[class*="msuui_"][class*="_1rn3yq42"]');
+            // 使用更穩定的選擇器：找到所有包含寵物名稱的 span
+            const allNameElements = Array.from(document.getElementsByTagName('span'))
+                .filter(span => span.textContent.includes('#')); // 寵物名稱通常包含 #
             let found = false;
-
+    
             for (const element of allNameElements) {
                 if (element.textContent.includes(fullPetName)) {
-                    const parentDiv = element.closest('div[class*="_14ahg4po"]');
-                    if (parentDiv) {
-                        const targetDiv = parentDiv.querySelector('div[class*="_14ahg4pr"]');
+                    // 往上找到包含寵物資訊的 tr
+                    const row = element.closest('tr');
+                    if (row) {
+                        // 在 tr 中找到第二個 td（通常是包含寵物資訊的單元格）
+                        const infoCell = row.children[1];
+                        // 在 td 中找到包含寵物名稱的 div 的下一個 div
+                        const targetDiv = infoCell.querySelector('div > div:nth-child(2)');
                         const existingSkills = targetDiv?.querySelector('.pet-skills-info');
-
+    
                         if (!existingSkills && targetDiv) {
                             const skillsDiv = document.createElement('div');
                             skillsDiv.className = 'pet-skills-info';
@@ -242,8 +268,8 @@ function translateSkill(skill) {
             <h3>技能過濾</h3>
             ${Object.entries(skillTranslations)
                 .map(([eng, chi]) => `
-                    <label>
-                        <input type="checkbox" value="${eng}"> ${chi}
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" value="${eng}"/> <span style="display: inline-flex; align-items: center;">${getskillImg(eng)} ${chi}</span>
                     </label>
                 `).join('')}
         `;
