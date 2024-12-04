@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 寵物技能快快出
 // @namespace    http://tampermonkey.net/
-// @version      0.8
+// @version      0.81
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 寵物技能
 // @match        https://msu.io/marketplace/nft?sort=ExploreSorting_*&price=0%2C10000000000&level=0%2C250&categories=1000400000%2C1000401001&potential=0%2C4&bonusPotential=0%2C4&starforce=0%2C25&viewMode=0*
@@ -15,6 +15,7 @@
 0.73 將資料保存 localStorage 中，並且過期時間為 24 小時
 0.75 稍微修改技能說明
 0.8 新增icon
+0.81 優化技能顯示
 */
 
 (function() {
@@ -176,19 +177,31 @@ function translateSkill(skill) {
                         const existingSkills = targetDiv?.querySelector('.pet-skills-info');
     
                         if (!existingSkills && targetDiv) {
-                            const skillsDiv = document.createElement('div');
-                            skillsDiv.className = 'pet-skills-info';
-                            skillsDiv.style.cssText = `
+                            const skillsContainer = document.createElement('div');
+                            skillsContainer.className = 'pet-skills-info';
+                            skillsContainer.style.cssText = `
                                 border-radius: 5px;
-                                font-size: 12px;
-                                color: #FFF;
-                                margin-top: 5px;
                                 padding: 5px;
+                                margin-top: 5px;
                                 z-index: 1;
-                                background-color: black;
                             `;
-                            skillsDiv.textContent = `技能: ${petSkills.map(skill => translateSkill(skill)).join(', ')}`;
-                            targetDiv.appendChild(skillsDiv);
+
+                            const { basic, special } = categorizeSkills(petSkills);
+                            
+                            // 基礎技能行
+                            const basicRow = document.createElement('div');
+                            basicRow.style.marginBottom = special.length ? '4px' : '0';
+                            basic.forEach(skill => basicRow.appendChild(createSkillElement(skill)));
+                            skillsContainer.appendChild(basicRow);
+                            
+                            // 特殊技能行
+                            if (special.length > 0) {
+                                const specialRow = document.createElement('div');
+                                special.forEach(skill => specialRow.appendChild(createSkillElement(skill, true)));
+                                skillsContainer.appendChild(specialRow);
+                            }
+
+                            targetDiv.appendChild(skillsContainer);
                             found = true;
                             break;
                         }
@@ -201,6 +214,35 @@ function translateSkill(skill) {
             // 如果沒找到，等待1秒後重試
             await delay(1000);
         }
+    }
+
+    function categorizeSkills(petSkills) {
+        const basicSkills = [
+            'Item Pouch',
+            'NESO Magnet',
+            'Auto HP Potion Pouch',
+            'Auto MP Potion Pouch'
+        ];
+        
+        return {
+            basic: petSkills.filter(skill => basicSkills.includes(skill)),
+            special: petSkills.filter(skill => !basicSkills.includes(skill))
+        };
+    }
+
+    function createSkillElement(skill, isSpecial = false) {
+        const skillDiv = document.createElement('div');
+        skillDiv.style.cssText = `
+            display: inline-block;
+            margin: 2px 4px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background-color: black;
+            color: ${isSpecial ? '#ffd700' : '#ffffff'};
+            font-size: 11px;
+        `;
+        skillDiv.innerHTML = `${translateSkill(skill)}`;
+        return skillDiv;
     }
 
     // 在 skillTranslations 後面加入
