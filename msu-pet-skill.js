@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         MSU 寵物技能快快出
 // @namespace    http://tampermonkey.net/
-// @version      0.73
+// @version      0.74
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 寵物技能
 // @match        https://msu.io/marketplace/nft?sort=ExploreSorting_*&price=0%2C10000000000&level=0%2C250&categories=1000400000%2C1000401001&potential=0%2C4&bonusPotential=0%2C4&starforce=0%2C25&viewMode=0*
-
+// @match        https://msu.io/marketplace/nft?price=0%2C10000000000&level=0%2C250&categories=1000400000%2C1000401001&potential=0%2C4&bonusPotential=0%2C4&starforce=0%2C25&viewMode=0*
 // @grant        none
 // @run-at       document-end
 // @license MIT
