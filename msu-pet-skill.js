@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 寵物技能快快出
 // @namespace    http://tampermonkey.net/
-// @version      0.74
+// @version      0.75
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 寵物技能
 // @match        https://msu.io/marketplace/nft?sort=ExploreSorting_*&price=0%2C10000000000&level=0%2C250&categories=1000400000%2C1000401001&potential=0%2C4&bonusPotential=0%2C4&starforce=0%2C25&viewMode=0*
@@ -13,7 +13,7 @@
 /*
 
 0.73 將資料保存 localStorage 中，並且過期時間為 24 小時
-
+0.75 稍微修改技能說明
 */
 
 (function() {
@@ -24,16 +24,16 @@
 
     // 定義要篩選的技能
 const skillTranslations = {
-    'Item Pouch': '拾取道具',
-    'NESO Magnet': '撿拾NESO',
-    'Auto HP Potion Pouch': '自動使用HP藥水',
-    'Auto MP Potion Pouch': '自動使用MP藥水',
+    'Item Pouch': '撿取道具',
+    'NESO Magnet': '撿取NESO',
+    'Auto HP Potion Pouch': '自動HP藥水',
+    'Auto MP Potion Pouch': '自動MP藥水',
     'Auto Move': '自動移動',
     'Expanded Auto Move': '擴大自動移動範圍',
-    'Fatten Up': '巨大化技能',
-    'Auto Buff': '自動施放加持技能',
+    'Fatten Up': '寵物巨大化',
+    'Auto Buff': '自動上Buff',
     'Pet Training Skill': '親密度提升',
-    'Magnet Effect': '磁力效果'
+    'Magnet Effect': '磁力效果(P寵)'
 };
 
 // 新增翻譯函數
