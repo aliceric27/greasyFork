@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 包包小精靈
 // @namespace    http://tampermonkey.net/
-// @version      0.51
+// @version      0.52
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 物品價格與庫存
 // @match        https://msu.io/marketplace/inventory/*
@@ -43,23 +43,23 @@
         const sidebar = document.createElement('div');
         sidebar.style.position = 'fixed';
         sidebar.style.left = '-180px';
-        sidebar.style.top = '50%';
+        sidebar.style.top = '51%';
         sidebar.style.transform = 'translateY(-50%)';
         sidebar.style.width = '200px';
         sidebar.style.height = '80vh';
-        sidebar.style.backgroundColor = 'rgba(250, 228, 254, 0.56)';
+        sidebar.style.backgroundColor = 'rgba(250, 228, 254, 0.2)';
         sidebar.style.color = '#000000';
         sidebar.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-        sidebar.style.transition = 'left 0.3s ease';
+        sidebar.style.transition = 'left 0.3s ease, background-color 0.5s ease';
         sidebar.style.overflowY = 'auto';
         sidebar.style.zIndex = '1000';
-        sidebar.style.padding = '15px';
+        sidebar.style.padding = '10px 15px';
         sidebar.style.borderRadius = '0 5px 5px 0';
         sidebar.style.border = '1px solid rgba(0,0,0,0.1)';
         sidebar.style.backdropFilter = 'blur(25px)';
 
         sidebar.style.scrollbarWidth = 'thin';
-        sidebar.style.scrollbarColor = 'rgb(38 38 38 / 19%)  rgb(38 38 38 / 0%)';
+        sidebar.style.scrollbarColor = 'rgb(38 38 38 / 0%)  rgb(38 38 38 / 0%)';
 
         const styleSheet = document.createElement('style');
         styleSheet.textContent = `
@@ -85,10 +85,13 @@
 
         sidebar.addEventListener('mouseenter', () => {
             sidebar.style.left = '0';
+            sidebar.style.backgroundColor = 'rgba(250, 228, 254, 0.56)';
+            sidebar.style.scrollbarColor = 'rgb(38 38 38 / 19%)  rgb(38 38 38 / 0%)';
         });
 
         sidebar.addEventListener('mouseleave', () => {
             sidebar.style.left = '-180px';
+            sidebar.style.backgroundColor = 'rgba(250, 228, 254, 0.2)';
         });
 
         document.body.appendChild(sidebar);
@@ -184,7 +187,7 @@
         button.textContent = '啟動價格查詢';
         button.style.position = 'fixed';
         button.style.left = '20px';
-        button.style.bottom = '20px';
+        button.style.bottom = '10px';
         button.style.padding = '10px 20px';
         button.style.backgroundColor = '#4CAF50';
         button.style.color = 'white';
