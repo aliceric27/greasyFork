@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 包包小精靈
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 物品價格與庫存
 // @match        https://msu.io/marketplace/inventory/*
@@ -135,7 +135,7 @@
         totalValueSpan.style.color = '#ffffff';
         totalValueSpan.style.borderTop = '1px solid #404040';
         totalValueSpan.appendChild(nesoImg);
-        totalValueSpan.appendChild(document.createTextNode(`這頁包包的總價值: ${totalValue.toFixed(6)}`));
+        totalValueSpan.appendChild(document.createTextNode(`背包總價值: ${totalValue.toFixed(6)}`));
         sidebar.appendChild(totalValueSpan);
     }
 
@@ -145,32 +145,14 @@
         if (url.includes('/marketplace/api/marketplace/inventory/') && 
             url.includes('/owned')) {
             try {
-                // 檢查 localStorage 中是否有未過期的資料
-                const cachedData = localStorage.getItem('msuInventoryData');
-                if (cachedData) {
-                    const { data, timestamp } = JSON.parse(cachedData);
-                    const now = new Date().getTime();
-                    // 檢查是否在 5 分鐘內
-                    if (now - timestamp < 5 * 60 * 1000) {
-                        console.log('使用快取資料');
-                        allItemsData = data;
-                        const sidebar = createSidebar();
-                        populateSidebar(sidebar, allItemsData);
-                        return new Response(JSON.stringify({ records: data.map(item => item.ownedItem) }));
-                    } else {
-                        // 超過 5 分鐘，清除快取資料
-                        console.log('快取資料已過期，清除並重新獲取');
-                        localStorage.removeItem('msuInventoryData');
-                        allItemsData = [];
-                    }
-                }
-
                 const response = await originalFetch(...args);
                 const clone = response.clone();
                 const data = await clone.json();
                 
                 if(data?.records){
+                    // 清空之前的資料
                     allItemsData = [];
+                    // 建立一個 Set 來追蹤已查詢過的物品名稱
                     const processedNames = new Set();
                     
                     for (const item of data.records) {
@@ -210,9 +192,8 @@
                             
                             // 將原始物品資料和最低價格資訊組合
                             const fullPrice = lowestPriceItem ? 
-                                (BigInt(lowestPriceItem.salesInfo.priceWei) / BigInt(1e18))
-                                    .toString() + '.' + 
-                                (BigInt(lowestPriceItem.salesInfo.priceWei) % BigInt(1e18))
+                                (BigInt(lowestPriceItem.salesInfo.priceWei) * BigInt(1e18) / BigInt(1e36)).toString() + '.' + 
+                                (BigInt(lowestPriceItem.salesInfo.priceWei) * BigInt(1e18) % BigInt(1e36))
                                     .toString()
                                     .padStart(18, '0')
                                     .slice(0, 6) : 
@@ -235,12 +216,6 @@
                     }
                     
                     console.log('所有物件資料:', allItemsData);
-
-                    // 儲存資料到 localStorage
-                    localStorage.setItem('msuInventoryData', JSON.stringify({
-                        data: allItemsData,
-                        timestamp: new Date().getTime()
-                    }));
 
                     // 創建並填充側邊欄
                     const sidebar = createSidebar();
