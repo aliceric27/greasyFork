@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 寵物技能快快出
 // @namespace    http://tampermonkey.net/
-// @version      0.82
+// @version      0.83
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 寵物技能
 // @match        https://msu.io/marketplace/nft?sort=ExploreSorting_*&price=0%2C10000000000&level=0%2C250&categories=1000400000%2C1000401001&potential=0%2C4&bonusPotential=0%2C4&starforce=0%2C25&viewMode=0*
@@ -330,6 +330,9 @@
         document.body.appendChild(filterDiv);
         // 初始化時執行一次過濾
         filterPetsBySkills();
+
+        // 在過濾面板創建完成後立即創建更新按鈕
+        createUpdateButton();
     }
 
     function filterPetsBySkills() {
@@ -402,4 +405,184 @@
             }
         }
     }
+
+    // 新增 Toast 樣式
+    const toastStyles = `
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 4px;
+            z-index: 1001;
+            animation: fadeInOut 2s ease;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(20px); }
+            10% { opacity: 1; transform: translateY(0); }
+            90% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+    `;
+
+    // 新增 Toast 函數
+    function showToast(message) {
+        // 添加樣式（如果還沒添加）
+        if (!document.querySelector('#toastStyles')) {
+            const style = document.createElement('style');
+            style.id = 'toastStyles';
+            style.textContent = toastStyles;
+            document.head.appendChild(style);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        // 2秒後移除 toast
+        setTimeout(() => {
+            toast.remove();
+        }, 2000);
+    }
+
+    // 新增按鈕創建函式
+    function createUpdateButton() {
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            
+            .loading-button {
+                position: relative;
+                color: transparent !important;
+            }
+            
+            .loading-button::after {
+                content: '';
+                position: absolute;
+                width: 16px;
+                height: 16px;
+                top: 50%;
+                left: 50%;
+                margin-left: -8px;
+                margin-top: -8px;
+                border: 2px solid #ffffff;
+                border-radius: 50%;
+                border-top-color: transparent;
+                animation: spin 1s linear infinite;
+            }
+        `;
+        document.head.appendChild(style);
+
+        const button = document.createElement('button');
+        button.textContent = '更新頁面';
+        button.style.cssText = `
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1000;
+            min-width: 120px;
+            min-height: 40px;
+        `;
+
+        button.addEventListener('mouseover', () => {
+            if (!button.classList.contains('loading-button')) {
+                button.style.backgroundColor = '#45a049';
+            }
+        });
+
+        button.addEventListener('mouseout', () => {
+            if (!button.classList.contains('loading-button')) {
+                button.style.backgroundColor = '#4CAF50';
+            }
+        });
+
+        button.addEventListener('click', async () => {
+            if (button.classList.contains('loading-button')) return;
+        
+            button.classList.add('loading-button');
+            button.disabled = true;
+        
+            try {
+                // 先取消所有過濾條件
+                const checkboxes = document.querySelectorAll('.skill-filter input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                // 執行過濾以顯示所有寵物
+                filterPetsBySkills();
+
+                // 獲取當前頁面的所有寵物資料
+                const response = await fetch(window.location.href);
+                const text = await response.text();
+                const doc = new DOMParser().parseFromString(text, 'text/html');
+                
+                // 從頁面中提取所有寵物的 tokenId
+                const allPetRows = document.querySelectorAll('tr[data-token-id]');
+                const storedData = getFromStorage() || {};
+                let allData = [];
+        
+                // 處理每個寵物
+                for (const row of allPetRows) {
+                    const tokenId = row.getAttribute('data-token-id');
+                    if (!tokenId) continue;
+        
+                    try {
+                        // 如果已經處理過，就跳過
+                        if (processedTokens.has(tokenId)) continue;
+        
+                        await delay(50);
+                        const response = await fetch(`https://msu.io/marketplace/api/marketplace/items/${tokenId}`);
+                        const itemData = await response.json();
+                        allData.push(itemData);
+                        storedData[tokenId] = itemData;
+        
+                        if (itemData.item && itemData.item.pet) {
+                            const petSkills = itemData.item.pet.petSkills || [];
+                            const mintingNo = itemData.tokenInfo?.mintingNo;
+                            const fullPetName = `${itemData.item.name} #${mintingNo}`;
+        
+                            await tryFindAndInsertSkills(fullPetName, petSkills);
+                        }
+        
+                        processedTokens.add(tokenId);
+                    } catch (error) {
+                        console.error(`無法獲取 tokenID ${tokenId} 的資料:`, error);
+                    }
+                }
+        
+                // 儲存更新後的資料
+                saveToStorage(storedData);
+                console.log('更新完成，新增資料:', allData);
+        
+                // 更新頁面上的技能資訊
+                updateSkillsOnPage();
+                
+                // 顯示完成提示
+                showToast('更新完成！');
+            } catch (error) {
+                console.error('更新過程發生錯誤:', error);
+                showToast('更新發生錯誤！');
+            } finally {
+                button.classList.remove('loading-button');
+                button.disabled = false;
+            }
+        });
+
+        document.body.appendChild(button);
+        return button;
+    }
+
 })();
