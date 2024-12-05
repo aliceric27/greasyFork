@@ -38,38 +38,39 @@
     }
     // 定義要篩選的技能
     const skillTranslations = {
-    'Item Pouch': `撿取道具`,
-    'NESO Magnet': `撿取NESO`,
-    'Auto HP Potion Pouch': `自動HP藥水`,
-    'Auto MP Potion Pouch': `自動MP藥水`,
-    'Auto Move': `自動移動`,
-    'Expanded Auto Move': `擴大自動移動範圍`,
-    'Fatten Up': `寵物巨大化`,
-    'Auto Buff': `自動上Buff`,
-    'Pet Training Skill': `親密度提升`,
-    'Magnet Effect': `磁力效果(P寵)`
-};
+        'Item Pouch': `撿取道具`,
+        'NESO Magnet': `撿取NESO`,
+        'Auto HP Potion Pouch': `自動HP藥水`,
+        'Auto MP Potion Pouch': `自動MP藥水`,
+        'Auto Move': `自動移動`,
+        'Expanded Auto Move': `擴大自動移動範圍`,
+        'Fatten Up': `寵物巨大化`,
+        'Auto Buff': `自動上Buff`,
+        'Pet Training Skill': `親密度提升`,
+        'Magnet Effect': `磁力效果(P寵)`
+    };
 
-function getskillImg(skill) {
-    if (skill === 'Magnet Effect') {
-        return '🧲';
+    function getskillImg(skill) {
+        if (skill === 'Magnet Effect') {
+            return '🧲';
+        }
+        return `<img src="${petImg[skill]}" alt="${skill}" width="24">` || skill;
     }
-    return `<img src="${petImg[skill]}" alt="${skill}" width="24">` || skill;
-}
 
-// 新增翻譯函數
-function translateSkill(skill) {
-    return skillTranslations[skill] || skill;
-}
+    // 新增翻譯函數
+    function translateSkill(skill) {
+        return skillTranslations[skill] || skill;
+    }
 
     const originalFetch = window.fetch;
     window.fetch = async (...args) => {
         const [resource, config] = args;
 
+        // 檢查是否是目標 API 請求
         if (resource.includes('/marketplace/api/marketplace/explore/items')) {
-            console.log('請求參數:', {
+            console.log('監聽到 API 請求:', {
                 url: resource,
-                body: JSON.parse(config.body)
+                body: config ? JSON.parse(config.body) : null
             });
 
             try {
@@ -139,6 +140,9 @@ function translateSkill(skill) {
                         if (!document.querySelector('.skill-filter')) {
                             createFilterPanel();
                         }
+
+                        // 更新頁面上的技能資訊
+                        updateSkillsOnPage();
                     }
                 });
 
@@ -383,5 +387,19 @@ function translateSkill(skill) {
             return null;
         }
         return items;
+    }
+
+    // 新增更新頁面技能資訊的函數
+    function updateSkillsOnPage() {
+        const storedData = getFromStorage() || {};
+        for (const tokenId in storedData) {
+            const itemData = storedData[tokenId];
+            if (itemData.item && itemData.item.pet) {
+                const petSkills = itemData.item.pet.petSkills || [];
+                const mintingNo = itemData.tokenInfo?.mintingNo;
+                const fullPetName = `${itemData.item.name} #${mintingNo}`;
+                tryFindAndInsertSkills(fullPetName, petSkills);
+            }
+        }
     }
 })();
