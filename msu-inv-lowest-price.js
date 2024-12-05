@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 包包小精靈
 // @namespace    http://tampermonkey.net/
-// @version      0.5
+// @version      0.51
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 物品價格與庫存
 // @match        https://msu.io/marketplace/inventory/*
@@ -47,17 +47,19 @@
         sidebar.style.transform = 'translateY(-50%)';
         sidebar.style.width = '200px';
         sidebar.style.height = '80vh';
-        sidebar.style.backgroundColor = '#252525';
-        sidebar.style.color = '#ffffff';
-        sidebar.style.boxShadow = '0 0 10px rgba(0,0,0,0.2)';
+        sidebar.style.backgroundColor = 'rgba(250, 228, 254, 0.56)';
+        sidebar.style.color = '#000000';
+        sidebar.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
         sidebar.style.transition = 'left 0.3s ease';
         sidebar.style.overflowY = 'auto';
         sidebar.style.zIndex = '1000';
         sidebar.style.padding = '15px';
-        sidebar.style.borderRadius = '0 8px 8px 0';
+        sidebar.style.borderRadius = '0 5px 5px 0';
+        sidebar.style.border = '1px solid rgba(0,0,0,0.1)';
+        sidebar.style.backdropFilter = 'blur(25px)';
 
         sidebar.style.scrollbarWidth = 'thin';
-        sidebar.style.scrollbarColor = '#666 #252525';
+        sidebar.style.scrollbarColor = 'rgb(38 38 38 / 19%)  rgb(38 38 38 / 0%)';
 
         const styleSheet = document.createElement('style');
         styleSheet.textContent = `
@@ -65,11 +67,17 @@
                 width: 8px;
             }
             .custom-sidebar::-webkit-scrollbar-track {
-                background: #252525;
+                background: 'rgba(255, 255, 255, 0)';
+                border-radius: 0 12px 12px 0;
             }
             .custom-sidebar::-webkit-scrollbar-thumb {
-                background-color: #666;
-                border-radius: 4px;
+                background-color: #cccccc;
+                border-radius: 0 12px 12px 0;
+                border: 2px solid transparent;
+                background-clip: padding-box;
+            }
+            .custom-sidebar::-webkit-scrollbar-thumb:hover {
+                background-color: #999999;
             }
         `;
         document.head.appendChild(styleSheet);
@@ -99,7 +107,7 @@
             const name = document.createElement('h4');
             name.style.margin = '0 0 5px 0';
             name.style.fontSize = '14px';
-            name.style.color = '#ffffff';
+            name.style.color = '#000000';
             name.textContent = itemData.ownedItem.name;
             itemDiv.appendChild(name);
 
@@ -112,7 +120,7 @@
             const price = document.createElement('p');
             price.style.margin = '5px 0 0 0';
             price.style.fontSize = '12px';
-            price.style.color = '#ffffff';
+            price.style.color = '#000000';
             const itemPrice = parseFloat(itemData.lowestPrice) || 0;
             price.textContent = `最低價格: ${itemPrice ? itemPrice : '無上架資料'}`;
             itemDiv.appendChild(price);
@@ -133,7 +141,7 @@
         totalValueSpan.style.display = 'block';
         totalValueSpan.style.padding = '10px';
         totalValueSpan.style.fontSize = '14px';
-        totalValueSpan.style.color = '#ffffff';
+        totalValueSpan.style.color = '#000000';
         totalValueSpan.style.borderTop = '1px solid #404040';
         totalValueSpan.appendChild(nesoImg);
         totalValueSpan.appendChild(document.createTextNode(`這頁背包總價值: ${totalValue.toFixed(6)}`));
