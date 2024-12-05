@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 包包小精靈
 // @namespace    http://tampermonkey.net/
-// @version      0.3
+// @version      0.4
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 物品價格與庫存
 // @match        https://msu.io/marketplace/inventory/*
@@ -192,9 +192,10 @@
                             
                             // 將原始物品資料和最低價格資訊組合
                             const fullPrice = lowestPriceItem ? 
-                                (BigInt(lowestPriceItem.salesInfo.priceWei) * BigInt(1e18) / BigInt(1e36)).toString() + '.' + 
-                                (BigInt(lowestPriceItem.salesInfo.priceWei) * BigInt(1e18) % BigInt(1e36))
-                                    .toString()
+                            (BigInt(lowestPriceItem.salesInfo.priceWei) / BigInt(1e18))
+                            .toString() + '.' + 
+                            (BigInt(lowestPriceItem.salesInfo.priceWei) % BigInt(1e18))
+                            .toString()
                                     .padStart(18, '0')
                                     .slice(0, 6) : 
                                 null;
