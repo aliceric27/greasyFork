@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 包包小精靈
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.3
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 物品價格與庫存
 // @match        https://msu.io/marketplace/inventory/*
@@ -135,7 +135,7 @@
         totalValueSpan.style.color = '#ffffff';
         totalValueSpan.style.borderTop = '1px solid #404040';
         totalValueSpan.appendChild(nesoImg);
-        totalValueSpan.appendChild(document.createTextNode(`背包總價值: ${totalValue.toFixed(6)}`));
+        totalValueSpan.appendChild(document.createTextNode(`這頁背包總價值: ${totalValue.toFixed(6)}`));
         sidebar.appendChild(totalValueSpan);
     }
 
