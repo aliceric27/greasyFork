@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 包包小精靈
 // @namespace    http://tampermonkey.net/
-// @version      0.4
+// @version      0.5
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 物品價格與庫存
 // @match        https://msu.io/marketplace/inventory/*
@@ -13,10 +13,11 @@
 (function() {
     'use strict';
     
-    const originalFetch = window.fetch;
     // 儲存所有物品資料的陣列
     let allItemsData = [];
-
+    // 儲存擷取到的物品資訊
+    let capturedItems = [];
+    
     // 取得最低價格物件的函式
     function getLowestPriceItem(priceData, exactName) {
         if (!priceData?.items || priceData.items.length === 0) {
@@ -139,96 +140,204 @@
         sidebar.appendChild(totalValueSpan);
     }
 
-    window.fetch = async function(...args) {
-        const [url, options] = args;
-        
-        if (url.includes('/marketplace/api/marketplace/inventory/') && 
-            url.includes('/owned')) {
-            try {
-                const response = await originalFetch(...args);
-                const clone = response.clone();
-                const data = await clone.json();
-                
-                if(data?.records){
-                    // 清空之前的資料
-                    allItemsData = [];
-                    // 建立一個 Set 來追蹤已查詢過的物品名稱
-                    const processedNames = new Set();
-                    
-                    for (const item of data.records) {
-                        const {tokenId, name} = item;
-                        
-                        // 檢查是否已經查詢過該物品
-                        if (processedNames.has(name)) {
-                            console.log(`${name} 已經查詢過，跳過重複請求`);
-                            continue;
-                        }
-                        
-                        // 將物品名稱加入已處理集合
-                        processedNames.add(name);
-                        
-                        try {
-                            const searchResult = await fetch("https://msu.io/marketplace/api/marketplace/explore/items", {
-                                headers: {
-                                    "accept": "*/*",
-                                    "cache-control": "no-cache",
-                                    "content-type": "application/json",
-                                    "sec-fetch-dest": "empty",
-                                    "sec-fetch-mode": "cors",
-                                    "sec-fetch-site": "same-origin"
-                                },
-                                body: JSON.stringify({
-                                    filter: { name },
-                                    sorting: "ExploreSorting_LOWEST_PRICE",
-                                    paginationParam: { pageNo: 1, pageSize: 135 }
-                                }),
-                                method: "POST",
-                                mode: "cors",
-                                credentials: "include"
-                            });
-                            
-                            const priceData = await searchResult.json();
-                            const lowestPriceItem = getLowestPriceItem(priceData, name);
-                            
-                            // 將原始物品資料和最低價格資訊組合
-                            const fullPrice = lowestPriceItem ? 
-                            (BigInt(lowestPriceItem.salesInfo.priceWei) / BigInt(1e18))
-                            .toString() + '.' + 
-                            (BigInt(lowestPriceItem.salesInfo.priceWei) % BigInt(1e18))
-                            .toString()
-                                    .padStart(18, '0')
-                                    .slice(0, 6) : 
-                                null;
-
-                            allItemsData.push({
-                                ownedItem: item,
-                                marketInfo: lowestPriceItem,
-                                lowestPrice: fullPrice
-                            });
-                            
-                            console.log(`${name} 的最低價格:`, 
-                                lowestPriceItem ? 
-                                fullPrice + 'Neso' : 
-                                '無上架資料');
-                            
-                        } catch (error) {
-                            console.error(`查詢 ${name} 價格時發生錯誤:`, error);
-                        }
-                    }
-                    
-                    console.log('所有物件資料:', allItemsData);
-
-                    // 創建並填充側邊欄
-                    const sidebar = createSidebar();
-                    populateSidebar(sidebar, allItemsData);
-                }
-                return response;
-            } catch (error) {
-                console.error('MSU 庫存資料擷取錯誤:', error);
-                throw error;
+    // 修改按鈕樣式和位置
+    function createStartButton() {
+        // 新增 CSS 樣式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
             }
-        }  
-        return originalFetch(...args);
-    };
+            
+            .loading-button {
+                position: relative;
+                color: transparent !important;
+            }
+            
+            .loading-button::after {
+                content: '';
+                position: absolute;
+                width: 16px;
+                height: 16px;
+                top: 50%;
+                left: 50%;
+                margin-left: -8px;
+                margin-top: -8px;
+                border: 2px solid #ffffff;
+                border-radius: 50%;
+                border-top-color: transparent;
+                animation: spin 1s linear infinite;
+            }
+        `;
+        document.head.appendChild(style);
+
+        const button = document.createElement('button');
+        button.textContent = '啟動價格查詢';
+        button.style.position = 'fixed';
+        button.style.left = '20px';
+        button.style.bottom = '20px';
+        button.style.padding = '10px 20px';
+        button.style.backgroundColor = '#4CAF50';
+        button.style.color = 'white';
+        button.style.border = 'none';
+        button.style.borderRadius = '5px';
+        button.style.cursor = 'pointer';
+        button.style.zIndex = '1000';
+        button.style.minWidth = '120px';  // 確保按鈕寬度固定
+        button.style.minHeight = '40px';   // 確保按鈕高度固定
+
+        button.addEventListener('mouseover', () => {
+            if (!button.classList.contains('loading-button')) {
+                button.style.backgroundColor = '#45a049';
+            }
+        });
+
+        button.addEventListener('mouseout', () => {
+            if (!button.classList.contains('loading-button')) {
+                button.style.backgroundColor = '#4CAF50';
+            }
+        });
+
+        button.addEventListener('click', async () => {
+            if (button.classList.contains('loading-button')) {
+                return; // 如果正在載入中，不執行任何操作
+            }
+            
+            // 添加載入動畫
+            button.classList.add('loading-button');
+            button.disabled = true;
+            
+            try {
+                await processItemsData(capturedItems);
+            } finally {
+                // 完成後移除載入動畫
+                button.classList.remove('loading-button');
+                button.disabled = false;
+                button.textContent = '更新價格';
+                button.style.backgroundColor = '#2196F3';
+            }
+        });
+
+        document.body.appendChild(button);
+        return button;
+    }
+
+    // 新增：監聽並擷取物品資訊的函式
+    function initializeDataCapture() {
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const [url, options] = args;
+            const response = await originalFetch(...args);
+            
+            if (url.includes('/marketplace/api/marketplace/inventory/') && 
+                url.includes('/owned')) {
+                try {
+                    const clone = response.clone();
+                    const data = await clone.json();
+                    if(data?.records) {
+                        capturedItems = data.records;
+                        console.log('已擷取物品資料:', capturedItems);
+                    }
+                } catch (error) {
+                    console.error('擷取物品資料時發生錯誤:', error);
+                }
+            }
+            return response;
+        };
+    }
+
+    // 新增：處理已擷取物品資料的函式
+    async function processItemsData(items) {
+        if (!items || items.length === 0) {
+            console.log('沒有可處理的物品資料');
+            return;
+        }
+
+        // 清空之前的資料
+        allItemsData = [];
+        // 建立一個 Set 來追蹤已查詢過的物品名稱
+        const processedNames = new Set();
+        
+        for (const item of items) {
+            const {name} = item;
+            
+            // 檢查是否已經查詢過該物品
+            if (processedNames.has(name)) {
+                console.log(`${name} 已經查詢過，跳過重複請求`);
+                continue;
+            }
+            
+            // 將物品名稱加入已處理集合
+            processedNames.add(name);
+            
+            try {
+                const searchResult = await fetch("https://msu.io/marketplace/api/marketplace/explore/items", {
+                    headers: {
+                        "accept": "*/*",
+                        "cache-control": "no-cache",
+                        "content-type": "application/json",
+                        "sec-fetch-dest": "empty",
+                        "sec-fetch-mode": "cors",
+                        "sec-fetch-site": "same-origin"
+                    },
+                    body: JSON.stringify({
+                        filter: { name },
+                        sorting: "ExploreSorting_LOWEST_PRICE",
+                        paginationParam: { pageNo: 1, pageSize: 135 }
+                    }),
+                    method: "POST",
+                    mode: "cors",
+                    credentials: "include"
+                });
+                
+                const priceData = await searchResult.json();
+                const lowestPriceItem = getLowestPriceItem(priceData, name);
+                
+                const fullPrice = lowestPriceItem ? 
+                    (BigInt(lowestPriceItem.salesInfo.priceWei) / BigInt(1e18))
+                    .toString() + '.' + 
+                    (BigInt(lowestPriceItem.salesInfo.priceWei) % BigInt(1e18))
+                    .toString()
+                    .padStart(18, '0')
+                    .slice(0, 6) : 
+                    null;
+
+                allItemsData.push({
+                    ownedItem: item,
+                    marketInfo: lowestPriceItem,
+                    lowestPrice: fullPrice
+                });
+                
+                console.log(`${name} 的最低價格:`, 
+                    lowestPriceItem ? 
+                    fullPrice + 'Neso' : 
+                    '無上架資料');
+                
+            } catch (error) {
+                console.error(`查詢 ${name} 價格時發生錯誤:`, error);
+            }
+        }
+        
+        // 創建並填充側邊欄
+        const sidebar = createSidebar();
+        populateSidebar(sidebar, allItemsData);
+    }
+
+    // 修改初始化函式
+    function initialize() {
+        // 先啟動資料擷取
+        initializeDataCapture();
+        
+        // 確保頁面已完全載入後再創建按鈕
+        if (document.readyState === 'complete') {
+            createStartButton();
+        } else {
+            window.addEventListener('load', createStartButton);
+        }
+    }
+
+    // 執行初始化
+    initialize();
 })();
 
