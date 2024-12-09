@@ -42,6 +42,7 @@
         const articles = document.querySelectorAll('div[class*="item-list"] > article');
         let currentActiveBtn = null;
         let isClickable = true;
+        let allButtons = []; // 新增儲存所有按鈕的陣列
 
         articles.forEach(article => {
             if (article.querySelector('.click-btn')) return;
@@ -53,21 +54,32 @@
                 let textDiv = document.createElement('div');
                 textDiv.textContent = '查看市場價格';
                 textDiv.className = 'click-btn';
+                allButtons.push(textDiv); // 將按鈕加入陣列
+
                 textDiv.onclick = async () => {
                     if (!isClickable) return;
 
                     isClickable = false;
+                    // 設定所有按鈕為禁用狀態
+                    allButtons.forEach(btn => {
+                        btn.style.cursor = 'not-allowed';
+                    });
+
                     const originalText = textDiv.textContent;
-                    textDiv.textContent = '';  // 清空文字
-                    textDiv.classList.add('loading');  // 添加載入動畫
+                    textDiv.textContent = '';
+                    textDiv.classList.add('loading');
 
                     const itemName = filterNFTitem(nameSpanElement.innerText);
                     const result = await fetchItme(itemName);
-                    textDiv.classList.remove('loading');  // 移除載入動畫
+                    textDiv.classList.remove('loading');
                     textDiv.textContent = result;
 
                     setTimeout(() => {
                         isClickable = true;
+                        // 恢復所有按鈕的狀態
+                        allButtons.forEach(btn => {
+                            btn.style.cursor = 'pointer';
+                        });
                         textDiv.textContent = originalText;
                     }, 3000);
                 }
@@ -105,7 +117,7 @@
                 padding: 5px;
                 text-align: center;
                 margin-top: 5px;
-                transition: background-color 0.3s;
+                transition: background-color 0.3s, cursor 0.3s;
                 display: none;
                 z-index: 9999;
             }
