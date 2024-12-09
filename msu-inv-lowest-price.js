@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 包包小精靈
 // @namespace    http://tampermonkey.net/
-// @version      0.6
+// @version      0.61
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 物品價格與庫存
 // @match        https://msu.io/marketplace/inventory/*
