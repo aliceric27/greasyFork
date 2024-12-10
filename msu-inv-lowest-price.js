@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         MSU 包包小精靈
 // @namespace    http://tampermonkey.net/
-// @version      0.61
+// @version      0.63
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 物品價格與庫存
-// @match        https://msu.io/marketplace/inventory/*
+// @match        https://msu.io/*
 // @grant        none
 // @run-at       document-end
 // @license MIT
@@ -12,29 +12,57 @@
 
 (function() {
     'use strict';
-    // 修改初始化函式
-    function initialize() {
-            window.addEventListener('load',()=>{
-                const observer = new MutationObserver((mutations) => {
-                    mutations.forEach((mutation) => {
-                        if (mutation.addedNodes.length) {
-                            getNFTitem();
-                        }
-                    });
-                });
 
-                // 監聽目標節點
-                const targetNode = document.querySelector('div[class*="item-list"]');
-                if (targetNode) {
-                    observer.observe(targetNode, {
-                        childList: true,
-                        subtree: true
-                    });
+    function waitForElement(selector) {
+        return new Promise(resolve => {
+            // 如果元素已存在，直接返回
+            if (document.querySelector(selector)) {
+                return resolve(document.querySelector(selector));
+            }
+
+            // 建立 observer 監聽 DOM 變化
+            const observer = new MutationObserver(mutations => {
+                if (document.querySelector(selector)) {
+                    observer.disconnect();
+                    resolve(document.querySelector(selector));
                 }
-
-                // 初始執行一次
-                getNFTitem();
             });
+
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        });
+    }
+
+    async function initialize() {
+        console.log('Initialize being called with URL:', window.location.href);
+        if (!window.location.href.includes('/marketplace/inventory/')) {
+            return;
+        }
+
+        try {
+            // 等待目標元素出現
+            const targetNode = await waitForElement('div[class*="item-list"]');
+            
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.addedNodes.length) {
+                        getNFTitem();
+                    }
+                });
+            });
+
+            observer.observe(targetNode, {
+                childList: true,
+                subtree: true
+            });
+            
+            // 初始執行一次
+            getNFTitem();
+        } catch (error) {
+            console.error('Error initializing:', error);
+        }
     }
 
     const getNFTitem = () => {
@@ -209,11 +237,32 @@
             return fullPrice ? `${fullPrice} Neso` : '無上架資料'
         } catch (error) {
             console.error(`查詢 ${itemName} 價格時發生錯誤:`, error);
+            return '查詢錯誤，被鎖啦'
         }
     }
+    initialize()
+    // URL 變化監聽
+    const originalPushState = history.pushState;  
+    const originalReplaceState = history.replaceState;  
+    
+    history.pushState = function (...args) {  
+        originalPushState.apply(this, args);  
+        handleUrlChange('pushState');
+    };  
+    
+    history.replaceState = function (...args) {  
+        originalReplaceState.apply(this, args);  
+        handleUrlChange('replaceState');
+    };  
+    
+    window.addEventListener('popstate', function () {  
+        handleUrlChange('popstate');  
+    });  
+    
+    function handleUrlChange(method) {  
+        console.log(`小精靈通知: [${method}] URL 已變化: ${window.location.href}`);  
+        initialize();
+    }
 
-
-    // 執行初始化
-    initialize();
 })();
 

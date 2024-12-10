@@ -10,13 +10,7 @@
 // @run-at       document-end
 // @license MIT
 // ==/UserScript==
-/*
 
-0.73 將資料保存 localStorage 中，並且過期時間為 24 小時
-0.75 稍微修改技能說明
-0.8 新增icon
-0.81 優化技能顯示
-*/
 
 (function() {
     'use strict';
