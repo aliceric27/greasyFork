@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 緞帶肥肥小錢包
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.12
 // @author       Alex from MyGOTW
 // @description  錢包地址管理助手
 // @match        https://msu.io/*
@@ -285,6 +285,26 @@
                         color: #000000;
                     `;
 
+                    // 新增包包連結
+                    const bagLink = document.createElement('a');
+                    bagLink.href = `https://msu.io/marketplace/inventory/${wallet.address}`;
+                    bagLink.target = "_blank";
+                    bagLink.innerHTML = "🔍";
+                    bagLink.style.cssText = `
+                        text-decoration: none;
+                        cursor: pointer;
+                        font-size: 16px;
+                        padding: 4px;
+                        transition: transform 0.2s ease;
+                    `;
+
+                    // 添加懸停效果
+                    bagLink.onmouseover = () => bagLink.style.transform = 'scale(1.2)';
+                    bagLink.onmouseout = () => bagLink.style.transform = 'scale(1)';
+
+                    // 將元素添加到 nameContainer
+                    nameContainer.append(nameInput, bagLink);
+
                     const addressInput = document.createElement('input');
                     addressInput.value = wallet.address;
                     addressInput.readOnly = true;
@@ -383,7 +403,6 @@
                         localStorage.setItem('walletAddresses', JSON.stringify(savedWallets));
                     };
 
-                    nameContainer.append(nameInput);
                     walletItem.append(nameContainer, addressInput, deleteButton);
                     addressList.appendChild(walletItem);
                 });
