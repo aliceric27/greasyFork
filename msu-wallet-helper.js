@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 緞帶肥肥小錢包
 // @namespace    http://tampermonkey.net/
-// @version      0.12
+// @version      0.13
 // @author       Alex from MyGOTW
 // @description  錢包地址管理助手
 // @match        https://msu.io/*
