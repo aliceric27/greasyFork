@@ -37,6 +37,12 @@
 
 
     const createWalletHelper = () => {
+        // 檢查是否已存在錢包小幫手
+        if (document.querySelector('#msu-wallet-helper')) {
+            console.log('錢包小幫手已存在，跳過創建');
+            return;
+        }
+        
         console.log('開始創建錢包小幫手...');
         try {
             // 從 localStorage 獲取保存的錢包資料
@@ -73,6 +79,7 @@
 
             // 創建主容器
             const container = document.createElement('div');
+            container.id = 'msu-wallet-helper';  // 添加 ID 以便檢查
             container.style.cssText = `
                 position: fixed;
                 right: -300px;

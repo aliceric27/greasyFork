@@ -9,11 +9,16 @@
 // @run-at       document-end
 // @license MIT
 // ==/UserScript==
- 
+
 (function() {
     'use strict';
-    const isDailog = window.localStorage.getItem('GEAR_UP_MODAL_CHECKED');
-    if(!isDailog){
+            const checklocal = window.localStorage.getItem('GEAR_UP_MODAL_CHECKED');
+            const isChecked = checklocal === 'true';
+            if(isChecked){
+                console.log('checklocal', checklocal)
+                console.log('今日已清除廣告')
+                return
+            }
     let isRemoved = false;
     const waitForElement = (selector) => {
         return new Promise(resolve => {
@@ -21,7 +26,7 @@
             if (document.querySelector(selector)) {
                 return resolve(document.querySelector(selector));
             }
- 
+
             // 建立 observer 監聽 DOM 變化
             const observer = new MutationObserver(mutations => {
                 if (document.querySelector(selector)) {
@@ -29,14 +34,14 @@
                     resolve(document.querySelector(selector));
                 }
             });
- 
+
             observer.observe(document.body, {
                 childList: true,
                 subtree: true
             });
         });
     }
- 
+
     const initialize = async () => {
         console.log('Initialize being called with URL:', window.location.href);
         try {
@@ -45,7 +50,7 @@
             const targetNode = await waitForElement('div[class*="msu-modal"]');
             const blackModal = await waitForElement('div[class*="msu-screen-blocker"]');
             console.log('目標元素已找到:', targetNode);
- 
+
             // 將該元素設置為 display: none
             targetNode.style.display = 'none';
             blackModal.style.display = 'none';
@@ -53,7 +58,7 @@
             isRemoved = true;
             document.body.style.overflow = 'auto';
             console.log('目標元素已被隱藏');
- 
+
             // 設置 observer 監聽後續變化
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
@@ -68,40 +73,39 @@
                     }
                 });
             });
- 
+
             // 監聽 document.body 以捕捉任何新增的 modal
             observer.observe(document.body, {
                 childList: true,
                 subtree: true
             });
- 
+
         } catch (error) {
             console.error('Error initializing:', error);
         }
     }
- 
+
     const handleUrlChange = (method) => {
         console.log(`小精靈通知: [${method}] URL 已變化: ${window.location.href}`);
         if (!isRemoved) {
             initialize();
         }
     };
- 
+
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
- 
+
     history.pushState = function(...args) {
         originalPushState.apply(history, args);
         handleUrlChange('pushState');
     };
- 
+
     history.replaceState = function(...args) {
         originalReplaceState.apply(history, args);
         handleUrlChange('replaceState');
     };
- 
+
     window.addEventListener('popstate', () => {
         handleUrlChange('popstate');
     });
-}
 })();
