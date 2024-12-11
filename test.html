@@ -1,0 +1,211 @@
+<style>
+    .container6065 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto;
+  gap: 3px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 10px;
+  }
+  
+  .grid-item6065 {
+  text-decoration: none;
+  background: linear-gradient(to bottom, #1a237e, #000051);
+  border-radius: 10px;
+  overflow: hidden;
+  }
+  
+  .lottery-box6065 {
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+  font-size: clamp(12px, 4vw, 14px); /* 調整字體大小 */
+  white-space: nowrap; /* 防止換行 */
+  /* background-image: url('https://soulpass-design.com/49tuku/m/assets/assets/image/prediction_thumbnail_macao.png'); */
+  background-size: cover; /* 讓背景圖片完整覆蓋 */
+  background-position: center; /* 背景圖片置中 */
+  background-repeat: no-repeat; /* 背景圖片不重複 */
+  }
+  
+  /* 类型 1 的样式 */
+  .lottery-box6065.type-1 {
+    background-image: url('https://soulpass-design.com/49tuku/mq/assets/assets/image/prediction_thumbnail_macao.jpg');
+  }
+  
+  /* 类型 2 的样式 */
+  .lottery-box6065.type-2 {
+    background-image: url('https://soulpass-design.com/49tuku/mq/assets/assets/image/prediction_thumbnail_hong_kong.jpg');
+  }
+  
+  /* 类型 3 的样式 */
+  .lottery-box6065.type-3 {
+    background-image: url('https://soulpass-design.com/49tuku/mq/assets/assets/image/prediction_thumbnail_macao_60.jpg');
+  }
+  
+  /* 类型 4 的样式 */
+  .lottery-box6065.type-4 {
+    background-image: url('https://soulpass-design.com/49tuku/mq/assets/assets/image/prediction_thumbnail_hong_kong_60.jpg');
+  }
+  
+  .lottery-box-title6065{
+      margin: 10px 0;
+  }
+  
+  .lottery-box-title6065 p {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  color: rgb(255, 56, 1);
+  font-size: clamp(20px, 4vw, 24px);
+  margin: 5px 0;
+  font-weight: 600;
+  font-family: "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
+  z-index:1;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .lottery-box-title6065 p::before {
+    content: attr(data-text);
+    position: absolute;
+    left: 50%;  /* 修改定位 */
+    top: 50%;   /* 修改定位 */
+    transform: translate(-50%, -50%);  /* 新增置中效果 */
+    z-index: -1;
+    -webkit-text-stroke: 1px #fff;
+    color: transparent;
+    width: 100%;  /* 新增寬度 */
+  }
+  
+  .verify-btn6065 {
+    background-color: rgb(255, 56, 1);
+    color: white;
+    padding: 5px 20px;
+    border-radius: 25px;
+    margin: 0px 0px 10px 0;
+    width: 90%;
+    text-align: center;
+    font-weight: 500;
+  }
+  
+  .result6065 {
+  color: white;
+  margin: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  width: 100%;
+  text-align: center;
+  padding: 5px 0;
+  }
+  
+  .top-banner6065 {
+  grid-column: 1 / -1;  /* 橫跨兩列 */
+  background-color: #d32f2f;
+  }
+  
+  .top-banner6065 img {
+  width: 100%;
+  height: auto;
+  display: block;
+  }
+  </style>
+  <div class="container6065">
+  <!-- 底部區塊（已移至頂部） -->
+  <div class="top-banner6065">
+    <a href="{{data.[0].g.[link]}}">
+      <img src="{{data.[0].g.[image_url]}}" alt="49彩票信息">
+    </a>
+  </div>
+
+  <!-- 8個視頻連結區塊 -->
+  <a href="{{data.[0].g.[video_list].[3]}}" class="grid-item6065" target="_blank">
+    <div class="lottery-box6065" :class="`type-${store.activeType}`" v-if="store.activeType >= 1 && store.activeType <= 4">
+      <div class="lottery-box-title6065">
+        <p data-text="澳门六合彩">澳门六合彩</p>
+        <p data-text="{{data.[0].g.[video_list].[0]}}">{{data.[0].g.[video_list].[0]}}</p>
+      </div>
+      <div class="verify-btn6065">{{data.[0].g.[video_list].[2]}}</div>
+      <p class="result6065">{{data.[0].g.[video_list].[1]}}</p>
+    </div>
+  </a>
+
+  <a href="{{data.[0].g.[video_list].[7]}}" class="grid-item6065" target="_blank">
+    <div class="lottery-box6065" :class="`type-${store.activeType}`" v-if="store.activeType >= 1 && store.activeType <= 4">
+      <div class="lottery-box-title6065">
+        <p data-text="澳门六合彩">澳门六合彩</p>
+        <p data-text="{{data.[0].g.[video_list].[4]}}">{{data.[0].g.[video_list].[4]}}</p>
+      </div>
+      <div class="verify-btn6065">{{data.[0].g.[video_list].[6]}}</div>
+      <p class="result6065">{{data.[0].g.[video_list].[5]}}</p>
+    </div>
+  </a>
+
+  <a href="{{data.[0].g.[video_list].[11]}}" class="grid-item6065" target="_blank">
+    <div class="lottery-box6065" :class="`type-${store.activeType}`" v-if="store.activeType >= 1 && store.activeType <= 4">
+      <div class="lottery-box-title6065">
+        <p data-text="澳门六合彩">澳门六合彩</p>
+        <p data-text="{{data.[0].g.[video_list].[8]}}">{{data.[0].g.[video_list].[8]}}</p>
+      </div>
+      <div class="verify-btn6065">{{data.[0].g.[video_list].[10]}}</div>
+      <p class="result6065">{{data.[0].g.[video_list].[9]}}</p>
+    </div>
+  </a>
+
+  <a href="{{data.[0].g.[video_list].[15]}}" class="grid-item6065" target="_blank">
+    <div class="lottery-box6065" :class="`type-${store.activeType}`" v-if="store.activeType >= 1 && store.activeType <= 4">
+      <div class="lottery-box-title6065">
+        <p data-text="澳门六合彩">澳门六合彩</p>
+        <p data-text="{{data.[0].g.[video_list].[12]}}">{{data.[0].g.[video_list].[12]}}</p>
+      </div>
+      <div class="verify-btn6065">{{data.[0].g.[video_list].[14]}}</div>
+      <p class="result6065">{{data.[0].g.[video_list].[13]}}</p>
+    </div>
+  </a>
+
+  <a href="{{data.[0].g.[video_list].[19]}}" class="grid-item6065" target="_blank">
+    <div class="lottery-box6065" :class="`type-${store.activeType}`" v-if="store.activeType >= 1 && store.activeType <= 4">
+      <div class="lottery-box-title6065">
+        <p data-text="澳门六合彩">澳门六合彩</p>
+        <p data-text="{{data.[0].g.[video_list].[16]}}">{{data.[0].g.[video_list].[16]}}</p>
+      </div>
+      <div class="verify-btn6065">{{data.[0].g.[video_list].[18]}}</div>
+      <p class="result6065">{{data.[0].g.[video_list].[17]}}</p>
+    </div>
+  </a>
+
+  <a href="{{data.[0].g.[video_list].[23]}}" class="grid-item6065" target="_blank">
+    <div class="lottery-box6065" :class="`type-${store.activeType}`" v-if="store.activeType >= 1 && store.activeType <= 4">
+      <div class="lottery-box-title6065">
+        <p data-text="澳门六合彩">澳门六合彩</p>
+        <p data-text="{{data.[0].g.[video_list].[20]}}">{{data.[0].g.[video_list].[20]}}</p>
+      </div>
+      <div class="verify-btn6065">{{data.[0].g.[video_list].[22]}}</div>
+      <p class="result6065">{{data.[0].g.[video_list].[21]}}</p>
+    </div>
+  </a>
+
+  <a href="{{data.[0].g.[video_list].[27]}}" class="grid-item6065" target="_blank">
+    <div class="lottery-box6065" :class="`type-${store.activeType}`" v-if="store.activeType >= 1 && store.activeType <= 4">
+      <div class="lottery-box-title6065">
+        <p data-text="澳门六合彩">澳门六合彩</p>
+        <p data-text="{{data.[0].g.[video_list].[24]}}">{{data.[0].g.[video_list].[24]}}</p>
+      </div>
+      <div class="verify-btn6065">{{data.[0].g.[video_list].[26]}}</div>
+      <p class="result6065">{{data.[0].g.[video_list].[25]}}</p>
+    </div>
+  </a>
+
+  <a href="{{data.[0].g.[video_list].[31]}}" class="grid-item6065" target="_blank">
+    <div class="lottery-box6065" :class="`type-${store.activeType}`" v-if="store.activeType >= 1 && store.activeType <= 4">
+      <div class="lottery-box-title6065">
+        <p data-text="澳门六合彩">澳门六合彩</p>
+        <p data-text="{{data.[0].g.[video_list].[28]}}">{{data.[0].g.[video_list].[28]}}</p>
+      </div>
+      <div class="verify-btn6065">{{data.[0].g.[video_list].[30]}}</div>
+      <p class="result6065">{{data.[0].g.[video_list].[29]}}</p>
+    </div>
+  </a>
+
+</div>
