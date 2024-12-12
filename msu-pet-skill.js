@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 寵物技能快快出
 // @namespace    http://tampermonkey.net/
-// @version      0.83
+// @version      0.84
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 寵物技能
 // @match        https://msu.io/marketplace/nft?sort=ExploreSorting_*&price=0%2C10000000000&level=0%2C250&categories=1000400000%2C1000401001&potential=0%2C4&bonusPotential=0%2C4&starforce=0%2C25&viewMode=0*
@@ -158,22 +158,21 @@
     // 新增重試函數
     async function tryFindAndInsertSkills(fullPetName, petSkills, maxRetries = 3) {
         for (let i = 0; i < maxRetries; i++) {
-            // 使用更穩定的選擇器：找到所有包含寵物名稱的 span
-            const allNameElements = Array.from(document.getElementsByTagName('span'))
-                .filter(span => span.textContent.includes('#')); // 寵物名稱通常包含 #
+            // 使用 msuui-tr 選擇器
+            const allRows = document.querySelectorAll('.msuui-tr');
             let found = false;
-    
-            for (const element of allNameElements) {
-                if (element.textContent.includes(fullPetName)) {
-                    // 往上找到包含寵物資訊的 tr
-                    const row = element.closest('tr');
-                    if (row) {
-                        // 在 tr 中找到第二個 td（通常是包含寵物資訊的單元格）
-                        const infoCell = row.children[1];
-                        // 在 td 中找到包含寵物名稱的 div 的下一個 div
+
+            for (const row of allRows) {
+                // 在每個 row 中尋找包含寵物名稱的 span
+                const nameSpan = row.querySelector('span');
+                if (nameSpan && nameSpan.textContent.includes(fullPetName)) {
+                    // 找到包含寵物資訊的第二個 msuui-td
+                    const infoCell = row.querySelector('.msuui-td:nth-child(2)');
+                    if (infoCell) {
+                        // 找到包含寵物名稱的 div 的下一個 div
                         const targetDiv = infoCell.querySelector('div > div:nth-child(2)');
                         const existingSkills = targetDiv?.querySelector('.pet-skills-info');
-    
+
                         if (!existingSkills && targetDiv) {
                             const skillsContainer = document.createElement('div');
                             skillsContainer.className = 'pet-skills-info';
@@ -208,8 +207,6 @@
             }
 
             if (found) break;
-
-            // 如果沒找到，等待1秒後重試
             await delay(1000);
         }
     }
@@ -332,16 +329,17 @@
     function filterPetsBySkills() {
         const selectedSkills = Array.from(document.querySelectorAll('.skill-filter input:checked'))
             .map(checkbox => checkbox.value);
-    
-        const petRows = document.querySelectorAll('tr');
-    
+
+        // 修改選擇器為 msuui-tr
+        const petRows = document.querySelectorAll('.msuui-tr');
+
         petRows.forEach(row => {
             const skillsInfo = row.querySelector('.pet-skills-info');
             if (!skillsInfo) {
                 row.style.display = 'none';
                 return;
             }
-    
+
             // 獲取所有技能 div 的文字內容
             const petSkills = Array.from(skillsInfo.querySelectorAll('div > div'))
                 .map(skillDiv => {
@@ -351,11 +349,11 @@
                         .find(([_, value]) => value === chineseSkill);
                     return entry ? entry[0] : chineseSkill;
                 });
-    
+
             // 修改邏輯：必須完全符合所有勾選的技能才顯示
             const hasAllSelectedSkills = selectedSkills.length === 0 ||
                 selectedSkills.every(skill => petSkills.includes(skill));
-    
+
             row.style.display = hasAllSelectedSkills ? '' : 'none';
         });
     }

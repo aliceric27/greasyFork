@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 包包小精靈
 // @namespace    http://tampermonkey.net/
-// @version      0.63
+// @version      0.64
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 物品價格與庫存
 // @match        https://msu.io/*
@@ -41,6 +41,35 @@
             return;
         }
 
+        // 添加 API 監聽
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const [resource, config] = args;
+            
+            // 檢查是否為目標 API
+            if (typeof resource === 'string' && 
+                resource.includes('/marketplace/api/marketplace/inventory/') && 
+                resource.includes('/owned')) {
+                
+                try {
+                    const response = await originalFetch.apply(this, args);
+                    const clone = response.clone();
+                    const jsonData = await clone.json();
+                    
+                    // 將數據保存在全局變數中
+                    window.inventoryData = jsonData;
+                    console.log('已保存背包資料:', jsonData);
+                    
+                    return response;
+                } catch (error) {
+                    console.error('監聽 API 時發生錯誤:', error);
+                    return originalFetch.apply(this, args);
+                }
+            }
+            
+            return originalFetch.apply(this, args);
+        };
+
         try {
             // 等待目標元素出現
             const targetNode = await waitForElement('div[class*="item-list"]');
@@ -72,7 +101,7 @@
         let isClickable = true;
         let allButtons = []; // 新增儲存所有按鈕的陣列
 
-        articles.forEach(article => {
+        articles.forEach((article, index) => {
             if (article.querySelector('.click-btn')) return;
 
             const nameSpanElement = article.querySelector('.leave-box div div span:first-child');
@@ -96,9 +125,13 @@
                     const originalText = textDiv.textContent;
                     textDiv.textContent = '';
                     textDiv.classList.add('loading');
-
                     const itemName = filterNFTitem(nameSpanElement.innerText);
-                    const result = await fetchItme(itemName);
+                    const itemCategoryNo =  window.inventoryData.records[index].category.categoryNo
+                    const searchItem = {
+                        name:itemName,
+                        categoryNo:itemCategoryNo ? itemCategoryNo : null
+                    }
+                    const result = await fetchItme(searchItem);
                     textDiv.classList.remove('loading');
                     textDiv.textContent = result;
 
@@ -203,7 +236,7 @@
         }, exactMatches[0]);
     }
 
-    const fetchItme = async(itemName) => {
+    const fetchItme = async(item) => {
         try {
             const searchResult = await fetch("https://msu.io/marketplace/api/marketplace/explore/items", {
                 headers: {
@@ -215,7 +248,14 @@
                     "sec-fetch-site": "same-origin"
                 },
                 body: JSON.stringify({
-                    filter: { name:itemName },
+                    filter: { 
+                        name:item.name,
+                        categoryNo:item.categoryNo,
+                        level:{min:0, max: 250},
+                        potential:{min:0, max: 4},
+                        price:{min:0, max: 10000000000},
+                        starforce:{min:0, max: 25}
+                     },
                     sorting: "ExploreSorting_LOWEST_PRICE",
                     paginationParam: { pageNo: 1, pageSize: 135 }
                 }),
@@ -225,7 +265,7 @@
             });
 
             const priceData = await searchResult.json();
-            const lowestPriceItem = getLowestPriceItem(priceData, itemName);
+            const lowestPriceItem = getLowestPriceItem(priceData, item.name);
             const fullPrice = lowestPriceItem ?
                 (BigInt(lowestPriceItem.salesInfo.priceWei) / BigInt(1e18))
                 .toString() + '.' +
