@@ -232,7 +232,9 @@
                 (BigInt(lowestPriceItem.salesInfo.priceWei) % BigInt(1e18))
                 .toString()
                 .padStart(18, '0')
-                .slice(0, 6) :
+                .slice(0, 6)
+                .replace(/\.?0+$/, '')
+                :
                 null;
             return fullPrice ? `${fullPrice} Neso` : '無上架資料'
         } catch (error) {
