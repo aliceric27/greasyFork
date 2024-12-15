@@ -101,9 +101,9 @@
                         console.log('未處理的 Token:', AllToken);
 
                         // 對每個未處理的 tokenID 發送 API 請求
-                        for (const tokenId of AllToken) {
+                        const fetchPromises = AllToken.map(async (tokenId) => {
                             try {
-                                console.log('開始抓資料啦')
+                                console.log('開始抓資料啦');
                                 await delay(50);
                                 const response = await originalFetch(`https://msu.io/marketplace/api/marketplace/items/${tokenId}`);
                                 const itemData = await response.json();
@@ -122,7 +122,10 @@
                             } catch (error) {
                                 console.error(`無法獲取 tokenID ${tokenId} 的資料:`, error);
                             }
-                        }
+                        });
+
+                        // 等待所有請求完成
+                        await Promise.all(fetchPromises);
 
                         // 儲存更新後的資料
                         saveToStorage(storedData);
