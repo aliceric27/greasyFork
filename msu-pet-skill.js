@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 寵物技能快快出
 // @namespace    http://tampermonkey.net/
-// @version      0.84
+// @version      0.85
 // @author       Alex from MyGOTW
 // @description  擷取 MSU.io 寵物技能
 // @match        https://msu.io/marketplace/*categories=1000400000*
@@ -503,76 +503,19 @@
             }
         });
 
-        button.addEventListener('click', async () => {
+        button.addEventListener('click', () => {
             if (button.classList.contains('loading-button')) return;
-        
+
             button.classList.add('loading-button');
             button.disabled = true;
-        
-            try {
-                // 先取消所有過濾條件
-                const checkboxes = document.querySelectorAll('.skill-filter input[type="checkbox"]');
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = false;
-                });
-                // 執行過濾以顯示所有寵物
-                filterPetsBySkills();
 
-                // 獲取當前頁面的所有寵物資料
-                const response = await fetch(window.location.href);
-                const text = await response.text();
-                const doc = new DOMParser().parseFromString(text, 'text/html');
-                
-                // 從頁面中提取所有寵物的 tokenId
-                const allPetRows = document.querySelectorAll('tr[data-token-id]');
-                const storedData = getFromStorage() || {};
-                let allData = [];
-        
-                // 處理每個寵物
-                for (const row of allPetRows) {
-                    const tokenId = row.getAttribute('data-token-id');
-                    if (!tokenId) continue;
-        
-                    try {
-                        // 如果已經處理過，就跳過
-                        if (processedTokens.has(tokenId)) continue;
-        
-                        await delay(50);
-                        const response = await fetch(`https://msu.io/marketplace/api/marketplace/items/${tokenId}`);
-                        const itemData = await response.json();
-                        allData.push(itemData);
-                        storedData[tokenId] = itemData;
-        
-                        if (itemData.item && itemData.item.pet) {
-                            const petSkills = itemData.item.pet.petSkills || [];
-                            const mintingNo = itemData.tokenInfo?.mintingNo;
-                            const fullPetName = `${itemData.item.name} #${mintingNo}`;
-        
-                            await tryFindAndInsertSkills(fullPetName, petSkills);
-                        }
-        
-                        processedTokens.add(tokenId);
-                    } catch (error) {
-                        console.error(`無法獲取 tokenID ${tokenId} 的資料:`, error);
-                    }
-                }
-        
-                // 儲存更新後的資料
-                saveToStorage(storedData);
-                console.log('更新完成，新增資料:', allData);
-        
-                // 更新頁面上的技能資訊
-                updateSkillsOnPage();
-                
-                // 顯示完成提示
-                showToast('更新完成！');
-            } catch (error) {
-                console.error('更新過程發生錯誤:', error);
-                showToast('更新發生錯誤！');
-            } finally {
-                button.classList.remove('loading-button');
-                button.disabled = false;
-            }
+            // 顯示提示訊息
+            showToast('正在重新載入頁面...');
+
+            // 延遲一小段時間後重新載入頁面，讓使用者能看到提示訊息
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         });
 
         document.body.appendChild(button);
