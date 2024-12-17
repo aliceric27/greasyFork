@@ -227,7 +227,7 @@
                 },
                 
                 // 物品連結
-                itemUrl: `https://msu.io/marketplace/items/${activity.tokenId}`,
+                itemUrl: `https://msu.io/marketplace/nft/${activity.tokenId}`,
                 
                 // 分頁資訊
                 pageInfo: activity.pageInfo,
