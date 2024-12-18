@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MSU 掛幣檢測器
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @author       Alex from MyGOTW
 // @description  查詢是否買幣
 // @match        https://msu.io/*
